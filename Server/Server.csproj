@@ -50,7 +50,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LogLib">
-      <HintPath>..\..\..\MySpace\我的类库\LogLib\bin\x64\Debug\LogLib.dll</HintPath>
+      <HintPath>..\LogLib\bin\x64\Debug\LogLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

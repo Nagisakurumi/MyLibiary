@@ -32,7 +32,7 @@ namespace LogLib
         /// <summary>
         /// 日志文件路径
         /// </summary>
-        public static string PathDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\Log\\";
+        public static string PathDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "\\Log\\");
         /// <summary>
         /// 保存日志文件的路径
         /// </summary>
@@ -129,38 +129,38 @@ namespace LogLib
         /// <returns></returns>
         private static void Write(LogInfo log, string message)
         {
-            lock (lockObj)
+            //lock (lockObj)
+            //{
+            if (!Directory.Exists(PathDirectory))
             {
-                if (!Directory.Exists(PathDirectory))
-                {
-                    Directory.CreateDirectory(PathDirectory);
-                }
-                FileInfo fileInfo = new FileInfo(log.CurrentPath);
-                log.ErroStringEvent?.Invoke(message);
-                if(fileInfo.Exists)
-                {
-                    //if(fileInfo.Length > MaxFileSize)
-                    //{
+                Directory.CreateDirectory(PathDirectory);
+            }
+            FileInfo fileInfo = new FileInfo(log.CurrentPath);
+            log.ErroStringEvent?.Invoke(message);
+            if(fileInfo.Exists)
+            {
+                //if(fileInfo.Length > MaxFileSize)
+                //{
 
-                    //}
-                    using (FileStream stream = File.Open(log.CurrentPath, FileMode.Append))
-                    {
-                        byte[] datas = System.Text.Encoding.UTF8.GetBytes(message.ToString());
-                        stream.Write(datas, 0, datas.Length);
-                        datas = null;
-                    }
-
-                }
-                else
+                //}
+                using (FileStream stream = File.Open(log.CurrentPath, FileMode.Append))
                 {
-                    using (FileStream stream = File.Create(log.CurrentPath))
-                    {
-                        byte[] datas = System.Text.Encoding.UTF8.GetBytes(message.ToString());
-                        stream.Write(datas, 0, datas.Length);
-                        datas = null;
-                    }
+                    byte[] datas = System.Text.Encoding.UTF8.GetBytes(message.ToString());
+                    stream.Write(datas, 0, datas.Length);
+                    datas = null;
+                }
+
+            }
+            else
+            {
+                using (FileStream stream = File.Create(log.CurrentPath))
+                {
+                    byte[] datas = System.Text.Encoding.UTF8.GetBytes(message.ToString());
+                    stream.Write(datas, 0, datas.Length);
+                    datas = null;
                 }
             }
+            //}
         }
         /// <summary>
         /// 打印进度

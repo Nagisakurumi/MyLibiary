@@ -5,6 +5,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading;
+using static LogLib.LogInfo;
 
 namespace Server
 {
@@ -62,7 +63,7 @@ namespace Server
             }
             catch (Exception ex)
             {
-                LogLib.Log.Write(new LogLib.LogMessage("客户端断开连接失败!", ex));
+                Log.Write(new LogLib.LogMessage("客户端断开连接失败!", ex));
             }
         }
         /// <summary>
@@ -71,7 +72,7 @@ namespace Server
         /// <param name="msg"></param>
         public override void Send(string msg)
         {
-            LogLib.Log.Write("send : [" + msg + "]");
+            Log.Write("send : [" + msg + "]");
             if(!IsAutoSize)
                 _socket.Send(GetSendBytes(msg), DataPageLength, SocketFlags.None);
             else

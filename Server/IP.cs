@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static LogLib.LogInfo;
 
 namespace Server
 {
@@ -68,7 +69,7 @@ namespace Server
             catch (Exception ex)
             {
                 throw new IPException(ip);
-                LogLib.Log.Write(ex);
+                Log.Write(ex);
             }
             
         }

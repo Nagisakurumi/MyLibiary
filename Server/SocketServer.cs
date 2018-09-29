@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Threading;
 using LogLib;
+using static LogLib.LogInfo;
 
 namespace Server
 {
