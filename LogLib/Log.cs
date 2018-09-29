@@ -40,7 +40,7 @@ namespace LogLib
         {
             get
             {
-                return AppDomain.CurrentDomain.BaseDirectory + "\\Log\\" + FileName + DateTime.Now.ToShortDateString().Replace('/', '-') + ".log";  ///获取日志时间作为文件名
+                return Path.Combine(PathDirectory, FileName + DateTime.Now.ToShortDateString().Replace('/', '-') + ".log");  ///获取日志时间作为文件名
             }
         }
         /// <summary>
