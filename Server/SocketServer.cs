@@ -5,8 +5,6 @@ using System.Text;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading;
-using LogLib;
-using static LogLib.LogInfo;
 
 namespace Server
 {
@@ -73,11 +71,9 @@ namespace Server
                 _listenningThread.IsBackground = true;
                 _listenningThread.Start();
                 _isOpen = true;
-                Log.Write("服务器启动成功!");
             }
             catch (Exception ex)
             {
-                Log.Write("服务器启动失败!" + ex.Message);
             }
         }
 
@@ -88,7 +84,6 @@ namespace Server
         {
             try
             {
-                Log.Write("服务器开启监听等待客户端的连接!");
                 while (true)
                 {
                     //当新的连接进来的时候保存连接对象
@@ -102,11 +97,9 @@ namespace Server
              }
             catch(ThreadAbortException)
             {
-                Log.Write("服务器结束监听!");
             }
             catch (Exception ex)
             {
-                Log.Write(ex.Message);
                 return;
             }
         }
@@ -124,7 +117,6 @@ namespace Server
                 clientThread.Start(client);
                 ///添加
                 _linkPool.Add(client.RemoteEndPoint.ToString(), new SocketLinkObject(client, clientThread));
-                Log.Write("添加了一个客户端连接实例!");
             }
         }
         /// <summary>
@@ -144,12 +136,10 @@ namespace Server
                     _linkPool.Remove(key);
                     OnCloseLinkEvent(client);
                     //client.Dispose();
-                    Log.Write("断开一个客户端连接, 客户端信息为：" + key + "____");
                 }
             }
             catch (Exception ex)
             {
-                Log.Write("移除客户端实例失败!" + ex.Message);
             }
         }
 
@@ -162,29 +152,56 @@ namespace Server
             Socket clientSocket = client as Socket;
             try
             {
-                while(true)
+                if(this.ReciveBuffSize != -1)
+                    clientSocket.ReceiveBufferSize = this.ReciveBuffSize;
+                ///总数据 
+                List<byte> data = new List<byte>();
+                ///创建一个接受数据的字节流
+                byte[] recData = new byte[DataPageLength];
+                while (true)
                 {
-                    ///创建一个接受数据的字节流
-                    byte[] recData = new byte[DataPageLength];
-                    
-                    ///接受数据
-                    clientSocket.Receive(recData, DataPageLength, SocketFlags.None);
-                    if (clientSocket.Poll(10, SelectMode.SelectRead))
+                    data.Clear();
+                    if (this.IsReciverForAll)
                     {
-                        throw new Exception("连接已被断开!");
+                        int len = 0;
+                        while ((len = clientSocket.Receive(recData)) > 0)
+                        {
+                            if(len == recData.Length)
+                                data.AddRange(recData);
+                            else
+                            {
+                                for (int i = 0; i < len; i++)
+                                {
+                                    data.Add(recData[i]);
+                                }
+                            }
+                        }
+                        //clientSocket.Receive(data);
                     }
-                    DealMsg(recData, clientSocket);
+                    else
+                    {
+                        ///接受数据
+                        clientSocket.Receive(recData, DataPageLength, SocketFlags.None);
+                        data.AddRange(recData);
+                    }
+                    
+                    if (IsCheckLink)
+                    {
+                        if (clientSocket.Poll(10, SelectMode.SelectRead))
+                        {
+                            throw new Exception("连接已被断开!");
+                        }
+                    }
+                    DealMsg(data.ToArray(), clientSocket);
                 }
              }
             catch(ThreadAbortException abort)
             {
-                Log.Write("关闭线程!");
                 return;
             }
             catch (Exception ex)
             {
                 DelClientSocket(clientSocket);
-                Log.Write("断开一个客户端连接, 客户端信息为：" + "____" + ex.Message);
                 return;
             }
             
@@ -198,7 +215,6 @@ namespace Server
             {
                 if(IsOpen)
                 {
-                    Log.Write("开始关闭服务器!");
                     _socket.Close();
                     //关闭监听
                     _listenningThread.Abort();
@@ -214,7 +230,6 @@ namespace Server
             }
             catch (Exception ex)
             {
-                Log.Write("服务器关闭失败！" + ex.Message);
             }
             finally
             {
@@ -269,7 +284,6 @@ namespace Server
         /// <param name="client">客户端</param>
         public void Send(string msg, Socket client)
         {
-            Log.Write("send: [" + msg + "]");
             byte[] sendData = GetSendBytes(msg);
             try
             {

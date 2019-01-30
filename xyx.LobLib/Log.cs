@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace LogLib
+namespace xyxandwxx.LobLib
 {
     /// <summary>
     /// 日志文件类
@@ -32,7 +32,7 @@ namespace LogLib
         /// <summary>
         /// 日志文件路径
         /// </summary>
-        public static string PathDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\Log\\";
+        public static string PathDirectory = System.AppContext.BaseDirectory + "\\Log\\";
         /// <summary>
         /// 保存日志文件的路径
         /// </summary>
@@ -40,21 +40,17 @@ namespace LogLib
         {
             get
             {
-                return PathDirectory + FileName + DateTime.Now.ToShortDateString().Replace('/', '-') + ".log";  ///获取日志时间作为文件名
+                return PathDirectory + FileName + DateTime.Now.ToString("yyyy-MM-dd").Replace('/', '-') + ".log";  ///获取日志时间作为文件名
             }
         }
         /// <summary>
         /// 错误信息委托
         /// </summary>
-        public event Action<string> ErroStringEvent = null;
+        public event Action<LogMessage> ErroStringEvent = null;
         /// <summary>
         /// 输出日志类型
         /// </summary>
-        public LogErroType LogForntType = LogErroType.Normal | LogErroType.Waring | LogErroType.Erro;
-        /// <summary>
-        /// 日志输出详细程度
-        /// </summary>
-        public LogErroType LogForntDetail = LogErroType.Detail | LogErroType.NoDetail;
+        public LogErroType LogForntType = LogErroType.Normal | LogErroType.Waring | LogErroType.Debug | LogErroType.Erro;
         /// <summary>
         /// 日志文件名称
         /// </summary>
@@ -64,49 +60,87 @@ namespace LogLib
         /// </summary>
         /// <param name="msg">日志信息</param>
         /// <returns>是否写入成功</returns>
-        public bool Write(LogMessage logMsg)
+        public void log(params object [] logs)
         {
-            if ((logMsg.Type & LogForntType) != 0)
+            try
             {
-                bool isTrueWrite = false;
-                StringBuilder msg = new StringBuilder();  ///存放打印日志信息
-                //string fileName = PathDirectory + logMsg.LogTime.ToShortDateString().Replace('/', '-') + ".log";  ///获取日志时间作为文件名
-                msg.Append("[" + logMsg.LogTime.ToString() + "][" + logMsg.Type + "] -> ");
-                if ((LogForntDetail & LogErroType.NoDetail) != 0)
-                {
-                    msg.Append("[" + LogErroType.NoDetail + "]:" + logMsg.NormalMessage + "\r\n");
-                }
-                if ((LogForntDetail & LogErroType.Detail) != 0)
-                {
-                    msg.Append("[" + LogErroType.Detail + "]:" + logMsg.DetailMessage + "]" + "\r\n");
-                }
-                try
-                {
-                    LogInfo.Write(this, msg.ToString());
-                }
-                catch (Exception)
-                {
-                    isTrueWrite = false;
-                }
-                finally
-                {
-                    logMsg.Dispose();
-                    msg.Clear();
-                    msg = null;
-                }
-                return isTrueWrite;
+                LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Normal));
             }
-            else
+            catch (Exception)
             {
-                return false;
+            }
+            finally
+            {
+                //logs = null;
             }
         }
+
+        /// <summary>
+        /// 写入日志
+        /// </summary>
+        /// <param name="msg">日志信息</param>
+        /// <returns>是否写入成功</returns>
+        public void debug(params object[] logs)
+        {
+            try
+            {
+                LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Debug));
+            }
+            catch (Exception)
+            {
+            }
+            finally
+            {
+                //logs = null;
+            }
+        }
+
+        /// <summary>
+        /// 写入日志
+        /// </summary>
+        /// <param name="msg">日志信息</param>
+        /// <returns>是否写入成功</returns>
+        public void erro(params object[] logs)
+        {
+            try
+            {
+                LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Erro));
+            }
+            catch (Exception)
+            {
+            }
+            finally
+            {
+                //logs = null;
+            }
+        }
+
+        /// <summary>
+        /// 写入日志
+        /// </summary>
+        /// <param name="msg">日志信息</param>
+        /// <returns>是否写入成功</returns>
+        public void waring(params object[] logs)
+        {
+            try
+            {
+                LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Waring));
+            }
+            catch (Exception)
+            {
+            }
+            finally
+            {
+                //logs = null;
+            }
+        }
+
         /// <summary>
         /// 写入日志
         /// </summary>
         /// <param name="ags"></param>
         /// <returns></returns>
-        public bool Write(params object [] ags)
+        private string write(params object [] ags)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var item in ags)
@@ -116,10 +150,7 @@ namespace LogLib
                 else
                     sb.Append("null");
             }
-            this.Write(sb.ToString());
-            sb.Clear();
-            sb = null;
-            return true;
+            return sb.ToString();
         }
         /// <summary>
         /// 统一写入接口
@@ -127,10 +158,8 @@ namespace LogLib
         /// <param name="log"></param>
         /// <param name=""></param>
         /// <returns></returns>
-        private static void Write(LogInfo log, string message)
+        private static void WriteToFile(LogInfo log, LogMessage message)
         {
-            //lock (lockObj)
-            //{
             if (!Directory.Exists(PathDirectory))
             {
                 Directory.CreateDirectory(PathDirectory);
@@ -139,10 +168,6 @@ namespace LogLib
             log.ErroStringEvent?.Invoke(message);
             if(fileInfo.Exists)
             {
-                //if(fileInfo.Length > MaxFileSize)
-                //{
-
-                //}
                 using (FileStream stream = File.Open(log.CurrentPath, FileMode.Append))
                 {
                     byte[] datas = System.Text.Encoding.UTF8.GetBytes(message.ToString());
@@ -167,10 +192,8 @@ namespace LogLib
         /// </summary>
         /// <param name="current">进度</param>
         /// <param name="max">最多的格子</param>
-        public void Progress(float current, string taskname = "进度", int max = 20)
+        public void Progress(float current, string taskname = "进度", int max = 20, LogErroType logErroType = LogErroType.Normal)
         {
-            
-
             if (current > 1)
                 return;
             float value = ((float)max * current);
@@ -225,7 +248,7 @@ namespace LogLib
                     }
                 }
             }
-            Write(taskname, " : [", processstring, "]", current * 100, "%");
+            LogInfo.WriteToFile(this, new LogMessage(taskname, write(" : [", processstring, "]", current * 100, "%"), logErroType));
         }
     }
 
@@ -328,7 +351,8 @@ namespace LogLib
         /// <returns></returns>
         public override string ToString()
         {
-            return "[" + this.LogTime.ToString() + "][" + this.Type + "] -> " + "[" + LogErroType.NoDetail + "] : " + this.NormalMessage + "\r\n[" + LogErroType.Detail + "]:" + this.DetailMessage + "\r\n";
+            return string.Format("[{0} , {1}] -> {2} \r\n {3}", LogTime.ToString(),
+                    Type, NormalMessage, DetailMessage.Equals("") || DetailMessage == null ? "" : DetailMessage + "\r\n");
         }
         /// <summary>
         /// 隐式转换
@@ -358,11 +382,21 @@ namespace LogLib
     [Flags]
     public enum LogErroType : byte
     {
+        /// <summary>
+        /// 一般信息
+        /// </summary>
         Normal = 1,
+        /// <summary>
+        /// 警告
+        /// </summary>
         Waring = 2,
+        /// <summary>
+        /// 错误
+        /// </summary>
         Erro = 4,
-        Detail = 8,
-        NoDetail = 16,
-        None = 32,
+        /// <summary>
+        /// 调试信息
+        /// </summary>
+        Debug = 8,
     }
 }

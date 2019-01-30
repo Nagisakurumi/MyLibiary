@@ -5,7 +5,6 @@ using System.Text;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading;
-using static LogLib.LogInfo;
 
 namespace Server
 {
@@ -63,7 +62,6 @@ namespace Server
             }
             catch (Exception ex)
             {
-                Log.Write(new LogLib.LogMessage("客户端断开连接失败!", ex));
             }
         }
         /// <summary>
@@ -72,7 +70,6 @@ namespace Server
         /// <param name="msg"></param>
         public override void Send(string msg)
         {
-            Log.Write("send : [" + msg + "]");
             if(!IsAutoSize)
                 _socket.Send(GetSendBytes(msg), DataPageLength, SocketFlags.None);
             else
@@ -108,7 +105,7 @@ namespace Server
                     this.Close();
                 }
                 //连接服务器
-         
+                _socket.ReceiveBufferSize = this.ReciveBuffSize;
                  _socket.Connect(ipPoint);
                 LinkEvent?.Invoke(_socket);
                 _recMsgThread = new Thread(RecMsg);
@@ -126,6 +123,9 @@ namespace Server
         /// </summary>
         protected void RecMsg()
         {
+            List<byte> data = new List<byte>();
+            ///创建一个接受数据的字节流
+            byte[] recData = new byte[DataPageLength];
             while (true)
             {
                 if(!_socket.Connected)
@@ -133,11 +133,41 @@ namespace Server
                     Close();
                     break;
                 }
-                ///设置接受数据缓冲
-                byte[] datas = new byte[DataPageLength];
                 try
                 {
-                    _socket.Receive(datas, DataPageLength, SocketFlags.None);
+                    data.Clear();
+                    if (this.IsReciverForAll)
+                    {
+                        int len = 0;
+                        while ((len = _socket.Receive(recData)) > 0)
+                        {
+                            if (len == recData.Length)
+                                data.AddRange(recData);
+                            else
+                            {
+                                for (int i = 0; i < len; i++)
+                                {
+                                    data.Add(recData[i]);
+                                }
+                            }
+                        }
+                        //clientSocket.Receive(data);
+                    }
+                    else
+                    {
+                        
+                        ///接受数据
+                        _socket.Receive(recData, DataPageLength, SocketFlags.None);
+                        data.AddRange(recData);
+                    }
+
+                    if (IsCheckLink)
+                    {
+                        if (_socket.Poll(10, SelectMode.SelectRead))
+                        {
+                            throw new Exception("连接已被断开!");
+                        }
+                    }
                 }
                 catch(ThreadAbortException abe)
                 {
@@ -148,7 +178,7 @@ namespace Server
                     break;
                 }
                 ///处理消息
-                DealMsg(datas, _socket);
+                DealMsg(data.ToArray(), _socket);
             }
         }
         #endregion

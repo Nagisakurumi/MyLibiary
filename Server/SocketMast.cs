@@ -1,12 +1,10 @@
-﻿using LogLib;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using static LogLib.LogInfo;
 
 namespace Server
 {
@@ -72,7 +70,10 @@ namespace Server
         /// 断开连接事件
         /// </summary>
         public event ClsedLink CloseLinkEvent = null;
-
+        /// <summary>
+        /// 是否一直接收数据直到缓冲区为空
+        /// </summary>
+        public bool IsReciverForAll = false;
         #endregion
         #region 属性
         /// <summary>
@@ -85,6 +86,10 @@ namespace Server
                 return _socket;
             }
         }
+        /// <summary>
+        /// 接收缓冲区的大小
+        /// </summary>
+        public int ReciveBuffSize { get; set; } = -1;
         /// <summary>
         /// 服务器的IP地址
         /// </summary>
@@ -194,12 +199,57 @@ namespace Server
                 _isAutoSize = value;
             }
         }
-
+        /// <summary>
+        /// 是否强化检测是否断开连接
+        /// </summary>
+        public bool IsCheckLink { get; set; } = true;
         #endregion
         #region 方法
+        /// <summary>
+        /// 构造函数
+        /// </summary>
         public SocketMast()
         {
 
+        }
+        /// <summary>
+        /// 调用广播线程进行广播
+        /// </summary>
+        /// <param name="broadcastMsg">要广播的内容</param>
+        /// <returns></returns>
+        public static Thread Broadcast(string broadcastMsg)
+        {
+            Thread t = new Thread(_=> {
+                Socket sock = null;
+                IPEndPoint iep1 = null;
+                try
+                {
+                    sock = new Socket(AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Dgram,
+                        ProtocolType.Udp);
+                    iep1 = new IPEndPoint(IPAddress.Broadcast, 9095);
+
+                    sock.SetSocketOption(SocketOptionLevel.Socket,
+                        SocketOptionName.Broadcast, 1);
+
+                    byte[] data = Encoding.UTF8.GetBytes(_.ToString());
+                    while (true)
+                    {
+                        sock.SendTo(data, iep1);
+                        Thread.Sleep(1500);
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+                finally
+                {
+                    sock.Dispose();
+                    sock = null;
+                    iep1 = null;
+                }
+            });
+            t.Start(broadcastMsg);
+            return t;
         }
         /// <summary>
         /// 初始化Socket
@@ -214,7 +264,6 @@ namespace Server
             this.Ip = Ip;
             this.Port = Port;
             _isInit = true;
-            Log.Write("服务器初始化设置成功！");
             return true;
         }
         /// <summary>

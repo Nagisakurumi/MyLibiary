@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <Authors>xyxandwxx</Authors>
+    <Company>interface</Company>
+    <Description>日志系统</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AssemblyName>xyxandwxx.LobLib</AssemblyName>
+    <RootNamespace>xyxandwxx.LobLib</RootNamespace>
+    <AssemblyVersion>1.0.0.2</AssemblyVersion>
+    <FileVersion>1.0.0.2</FileVersion>
+    <Version>1.0.2</Version>
+  </PropertyGroup>
+
+</Project>
