@@ -202,7 +202,11 @@ namespace Server
         /// <summary>
         /// 是否强化检测是否断开连接
         /// </summary>
-        public bool IsCheckLink { get; set; } = true;
+        public bool IsCheckLink { get; set; } = false;
+        /// <summary>
+        /// 是否异步处理消息
+        /// </summary>
+        public bool IsDelMsgAsyn = false;
         #endregion
         #region 方法
         /// <summary>
@@ -401,7 +405,7 @@ namespace Server
                 {
                     ipAddress[index] = address[index].ToString();
                 }
-                pos = ipAddress.Length - 1;
+                //pos = ipAddress.Length - 1;
                 return Dns.Resolve(Dns.GetHostName()).AddressList[pos].ToString();
             }
             catch (Exception exc)
@@ -446,7 +450,13 @@ namespace Server
         /// <param name="obj"></param>
         public void OnRecDataEvent(RecDataObject obj)
         {
+            
+            if (!IsDelMsgAsyn)
             lock (this)
+            {
+                RecDataEvent?.Invoke(obj);
+            }
+            else
             {
                 RecDataEvent?.Invoke(obj);
             }

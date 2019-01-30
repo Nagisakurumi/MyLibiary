@@ -164,9 +164,14 @@ namespace Server
                     if (this.IsReciverForAll)
                     {
                         int len = 0;
-                        while ((len = clientSocket.Receive(recData)) > 0)
+                        //int idx = 0;
+                        len = clientSocket.Receive(recData);
+                        Console.WriteLine("收到一次信息!");
+                        while (clientSocket.Available > 0 || len > 0)
                         {
-                            if(len == recData.Length)
+                            if (len == 0)
+                                len = clientSocket.Receive(recData);
+                            if (len == recData.Length)
                                 data.AddRange(recData);
                             else
                             {
@@ -175,6 +180,9 @@ namespace Server
                                     data.Add(recData[i]);
                                 }
                             }
+                            //Console.WriteLine(idx++.ToString() + "次循环!");
+                            len = 0;
+                            //idx++;
                         }
                         //clientSocket.Receive(data);
                     }
@@ -192,6 +200,7 @@ namespace Server
                             throw new Exception("连接已被断开!");
                         }
                     }
+                    //Console.WriteLine("处理数据!");
                     DealMsg(data.ToArray(), clientSocket);
                 }
              }

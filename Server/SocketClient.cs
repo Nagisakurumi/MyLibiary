@@ -105,7 +105,8 @@ namespace Server
                     this.Close();
                 }
                 //连接服务器
-                _socket.ReceiveBufferSize = this.ReciveBuffSize;
+                if(this.ReciveBuffSize != -1)
+                    _socket.ReceiveBufferSize = this.ReciveBuffSize;
                  _socket.Connect(ipPoint);
                 LinkEvent?.Invoke(_socket);
                 _recMsgThread = new Thread(RecMsg);
@@ -139,8 +140,11 @@ namespace Server
                     if (this.IsReciverForAll)
                     {
                         int len = 0;
-                        while ((len = _socket.Receive(recData)) > 0)
+                        len = _socket.Receive(recData);
+                        while (_socket.Available > 0 || len > 0)
                         {
+                            if(len == 0)
+                                len = _socket.Receive(recData);
                             if (len == recData.Length)
                                 data.AddRange(recData);
                             else
@@ -150,6 +154,7 @@ namespace Server
                                     data.Add(recData[i]);
                                 }
                             }
+                            len = 0;
                         }
                         //clientSocket.Receive(data);
                     }
