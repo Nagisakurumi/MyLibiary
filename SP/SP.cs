@@ -56,7 +56,7 @@ namespace SP
         /// <summary>
         /// 发送数据锁
         /// </summary>
-        private object writeLock = new object();
+        //private object writeLock = new object();
         #endregion
         #region 访问器
         /// <summary>
@@ -279,24 +279,24 @@ namespace SP
                 return false;
             }
 
-            StringBuilder builder = new StringBuilder();
-            builder.Append("发送的包 ：");
-            foreach (var item in data)
-            {
-                builder.Append(item.ToString("x2"));
-                builder.Append(" ");
-            }
-            //Log.Write(builder.ToString());
-            builder.Clear();
-            builder = null;
+            //StringBuilder builder = new StringBuilder();
+            //builder.Append("发送的包 ：");
+            //foreach (var item in data)
+            //{
+            //    builder.Append(item.ToString("x2"));
+            //    builder.Append(" ");
+            //}
+            ////Log.Write(builder.ToString());
+            //builder.Clear();
+            //builder = null;
 
             try
             {
                 //byte[] sendata = Parity(data.ToArray());
-                lock (writeLock)
-                {
-                    port.Write(data, 0, data.Length);
-                }
+                //lock (writeLock)
+                //{
+                port.Write(data, 0, data.Length);
+                //}
                 return true;
             }
             catch (Exception ex)

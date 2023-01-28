@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace xyxandwxx.LobLib
+namespace xyxandwxx.LogLib
 {
     /// <summary>
     /// 日志文件类
@@ -32,7 +32,7 @@ namespace xyxandwxx.LobLib
         /// <summary>
         /// 日志文件路径
         /// </summary>
-        public static string PathDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\Log\\";
+        public static string PathDirectory = System.AppContext.BaseDirectory + "\\Log\\";
         /// <summary>
         /// 保存日志文件的路径
         /// </summary>
@@ -40,7 +40,7 @@ namespace xyxandwxx.LobLib
         {
             get
             {
-                return PathDirectory + FileName + DateTime.Now.ToShortDateString().Replace('/', '-') + ".log";  ///获取日志时间作为文件名
+                return PathDirectory + FileName + DateTime.Now.ToString("yyyy-MM-dd").Replace('/', '-') + ".log";  ///获取日志时间作为文件名
             }
         }
         /// <summary>
@@ -50,11 +50,11 @@ namespace xyxandwxx.LobLib
         /// <summary>
         /// 输出日志类型
         /// </summary>
-        public LogErroType LogForntType = LogErroType.Normal | LogErroType.Waring | LogErroType.Debug | LogErroType.Erro;
+        public LogErroType LogForntType = LogErroType.Normal | LogErroType.Waring | LogErroType.Debug | LogErroType.Error;
         /// <summary>
         /// 日志文件名称
         /// </summary>
-        public string FileName { get; set; }
+        public string FileName { get; set; } = "日志文件";
         /// <summary>
         /// 写入日志
         /// </summary>
@@ -62,17 +62,7 @@ namespace xyxandwxx.LobLib
         /// <returns>是否写入成功</returns>
         public void log(params object [] logs)
         {
-            try
-            {
-                LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Normal));
-            }
-            catch (Exception ex)
-            {
-            }
-            finally
-            {
-                //logs = null;
-            }
+            LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Normal));
         }
 
         /// <summary>
@@ -82,17 +72,7 @@ namespace xyxandwxx.LobLib
         /// <returns>是否写入成功</returns>
         public void debug(params object[] logs)
         {
-            try
-            {
-                LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Debug));
-            }
-            catch (Exception)
-            {
-            }
-            finally
-            {
-                //logs = null;
-            }
+            LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Debug));
         }
 
         /// <summary>
@@ -100,19 +80,9 @@ namespace xyxandwxx.LobLib
         /// </summary>
         /// <param name="msg">日志信息</param>
         /// <returns>是否写入成功</returns>
-        public void erro(params object[] logs)
+        public void error(params object[] logs)
         {
-            try
-            {
-                LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Erro));
-            }
-            catch (Exception)
-            {
-            }
-            finally
-            {
-                //logs = null;
-            }
+            LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Error));
         }
 
         /// <summary>
@@ -122,17 +92,7 @@ namespace xyxandwxx.LobLib
         /// <returns>是否写入成功</returns>
         public void waring(params object[] logs)
         {
-            try
-            {
-                LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Waring));
-            }
-            catch (Exception)
-            {
-            }
-            finally
-            {
-                //logs = null;
-            }
+            LogInfo.WriteToFile(this, new LogMessage(write(logs), LogErroType.Waring));
         }
 
         /// <summary>
@@ -315,7 +275,7 @@ namespace xyxandwxx.LobLib
         /// <param name="msg">一般信息</param>
         /// <param name="ex">详细异常</param>
         /// <param name="type">日志类型</param>
-        public LogMessage(string msg, Exception ex, LogErroType type = LogErroType.Erro)
+        public LogMessage(string msg, Exception ex, LogErroType type = LogErroType.Error)
         {
             this.NormalMessage = msg + "  " + ex.Message;
             this.DetailMessage = ex.ToString();
@@ -393,7 +353,7 @@ namespace xyxandwxx.LobLib
         /// <summary>
         /// 错误
         /// </summary>
-        Erro = 4,
+        Error = 4,
         /// <summary>
         /// 调试信息
         /// </summary>
